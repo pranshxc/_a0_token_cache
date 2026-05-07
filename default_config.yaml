@@ -1,0 +1,35 @@
+# _a0_token_cache — Configuration
+# Override any value via env var TOKEN_METER_<KEY> (uppercase)
+
+enabled: true
+# env: TOKEN_METER_ENABLED=false
+
+# Log a hint panel after every LLM call showing token counts + cost
+show_per_call: true
+# env: TOKEN_METER_SHOW_PER_CALL=false
+
+# Show running session totals panel (updates each call)
+show_session_totals: true
+# env: TOKEN_METER_SHOW_SESSION_TOTALS=false
+
+# Write every call to JSONL for offline analysis
+write_jsonl: true
+# env: TOKEN_METER_WRITE_JSONL=false
+
+# ── Pricing (per 1M tokens, USD) ───────────────────────────────────────────
+# Set to 0 if you don't want cost estimates.
+# Defaults: 0 (safe for local/free models)
+#
+# Anthropic Claude Sonnet 4.5:  input=3.00  output=15.00  cache_read=0.30  cache_write=3.75
+# OpenAI GPT-4o:                input=2.50  output=10.00  cache_read=1.25  cache_write=0
+# Gemini 2.5 Flash:             input=0.15  output=0.60   cache_read=0.0375 cache_write=1.00
+# GLM / local:                  all 0
+
+price_input_per_1m: 0.0
+price_output_per_1m: 0.0
+price_cache_read_per_1m: 0.0
+price_cache_write_per_1m: 0.0
+# env: TOKEN_METER_PRICE_INPUT_PER_1M=3.00
+# env: TOKEN_METER_PRICE_OUTPUT_PER_1M=15.00
+# env: TOKEN_METER_PRICE_CACHE_READ_PER_1M=0.30
+# env: TOKEN_METER_PRICE_CACHE_WRITE_PER_1M=3.75

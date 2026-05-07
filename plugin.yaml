@@ -1,0 +1,9 @@
+name: _a0_token_cache
+version: "1.0.0"
+description: >
+  Per-call token meter: input, output, cached tokens + cost estimate.
+  Logs every LLM call, accumulates session totals, writes JSONL to
+  work/token_meter/<chat_id>.jsonl for offline analysis.
+author: pranshxc
+hooks:
+  - extensions/python/monologue_end/_60_token_meter.py
