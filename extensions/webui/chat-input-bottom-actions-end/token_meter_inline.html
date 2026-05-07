@@ -1,159 +1,125 @@
-<!-- Token Meter — inline in the bottom actions bar, beside Stop -->
-<template x-component="token-meter-inline">
 <div
   x-data="{
     get m() { return window.Alpine?.store('tokenMeter') || null; },
     open: false,
   }"
-  x-init="
-    if (!window._tmInlineReady) {
-      window._tmInlineReady = true;
-      window.addEventListener('token_meter_update', e => { /* Alpine reactivity via store */ });
-    }
-  "
   style="display:flex;align-items:center;gap:0;margin-left:auto;position:relative;"
 >
 
-  <!-- ── Pill / trigger ──────────────────────────────── -->
+  <!-- pill / trigger button -->
   <button
     type="button"
     @click="open = !open"
-    :title="open ? 'Close token meter' : 'Token meter'"
-    style="
-      display:flex;align-items:center;gap:5px;
-      background:transparent;border:1px solid transparent;
-      border-radius:6px;padding:4px 8px;cursor:pointer;
-      font-size:0.6rem;font-family:inherit;
-      color:var(--color-text,#ccc);
-      opacity:0.85;transition:all .2s;
-    "
-    :style="open ? 'border-color:#3a3a6a;background:#12121f;opacity:1;' : ''"
-    @mouseenter="$el.style.opacity='1';$el.style.borderColor='#2a2a4a'"
-    @mouseleave="if(!open){$el.style.opacity='0.85';$el.style.borderColor='transparent'}"
+    title="Token Meter"
+    class="text-button"
+    :style="open ? 'border:1px solid #3a3a6a;background:#12121f;opacity:1;border-radius:6px;' : 'border:1px solid transparent;'"
   >
-    <!-- mini stacked bar (always visible) -->
-    <div style="width:28px;height:7px;border-radius:3px;background:#1e1e2e;overflow:hidden;display:flex;flex-shrink:0;">
+    <!-- mini stacked bar -->
+    <div style="width:26px;height:6px;border-radius:3px;background:#1e1e2e;overflow:hidden;display:flex;flex-shrink:0;">
       <template x-if="m && m.last">
         <div style="display:contents;">
-          <div
-            :style="'height:100%;background:#22c55e;width:'+( m.last.input ? Math.min(100,Math.round(100*m.last.cache_read/m.last.input))+'%' : '0%' )"
-          ></div>
-          <div
-            :style="'height:100%;background:#6366f1;width:'+( m.last.input ? Math.min(100,Math.round(100*(m.last.input-m.last.cache_read)/m.last.input))+'%' : '0%' )"
-          ></div>
+          <div :style="'height:100%;background:#22c55e;transition:width .4s;width:'+( m.last.input ? Math.min(100,Math.round(100*m.last.cache_read/m.last.input))+'%' : '0%' )"></div>
+          <div :style="'height:100%;background:#6366f1;transition:width .4s;width:'+( m.last.input ? Math.min(100,Math.round(100*(m.last.input-m.last.cache_read)/m.last.input))+'%' : '0%' )"></div>
         </div>
-      </template>
-      <template x-if="!m || !m.last">
-        <div style="height:100%;width:100%;background:#2a2a3a;"></div>
       </template>
     </div>
 
-    <!-- token count -->
-    <span x-text="m && m.last ? m.last.input.toLocaleString() : '—'" style="min-width:32px;text-align:right;"></span>
-
-    <!-- cache hit % -->
+    <!-- last input tokens -->
     <span
-      x-show="m && m.last"
-      :style="'border-radius:4px;padding:1px 5px;font-size:0.55rem;font-weight:700;' + (m && m.last && m.last.cache_hit_pct > 50 ? 'background:#14532d;color:#4ade80;' : 'background:#1c1c1c;color:#666;')"
-      x-text="m && m.last ? m.last.cache_hit_pct.toFixed(0)+'%' : ''"
+      x-text="m && m.last ? m.last.input.toLocaleString() : '—'"
+      style="min-width:30px;text-align:right;"
     ></span>
 
-    <!-- cost (only if pricing set) -->
+    <!-- cache hit % badge -->
+    <span
+      x-show="m && m.last"
+      x-text="m && m.last ? m.last.cache_hit_pct.toFixed(0)+'%' : ''"
+      :style="'border-radius:4px;padding:1px 5px;font-size:0.55rem;font-weight:700;' + (m && m.last && m.last.cache_hit_pct > 50 ? 'background:#14532d;color:#4ade80;' : 'background:#1c1c1c;color:#666;')"
+    ></span>
+
+    <!-- cost -->
     <span
       x-show="m && m.pricingSet && m.pricingSet() && m.last"
+      x-text="m ? m.fmtCost(m.last?.cost_usd ?? 0) : ''"
       style="color:#9090c0;font-size:0.55rem;"
-      x-text="m ? m.fmtCost(m.last?.cost_usd??0) : ''"
     ></span>
 
     <!-- caret -->
     <span style="font-size:8px;opacity:.5;" x-text="open ? '▴' : '▾'"></span>
   </button>
 
-  <!-- ── Dropdown panel ────────────────────────────── -->
+  <!-- floating dropdown panel -->
   <div
     x-show="open"
-    x-transition:enter="transition ease-out duration-150"
-    x-transition:enter-start="opacity-0 scale-95"
-    x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="transition ease-in duration-100"
-    x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-95"
+    x-cloak
     @click.outside="open = false"
     style="
-      position:absolute;bottom:calc(100% + 8px);right:0;
-      width:300px;max-height:480px;overflow-y:auto;
-      background:#0d0d1a;border:1px solid #2a2a4a;
-      border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.6);
-      z-index:9999;font-family:inherit;
+      position:absolute;
+      bottom:calc(100% + 8px);
+      right:0;
+      width:300px;
+      max-height:480px;
+      overflow-y:auto;
+      background:#0d0d1a;
+      border:1px solid #2a2a4a;
+      border-radius:10px;
+      box-shadow:0 8px 32px rgba(0,0,0,.65);
+      z-index:9999;
+      font-family:inherit;
     "
   >
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:8px;padding:12px 14px 10px;border-bottom:1px solid #1e1e30;">
-      <span class="material-symbols-outlined" style="font-size:16px;color:#7c7cff;">monitoring</span>
-      <span style="font-size:12px;font-weight:600;color:#e0e0f0;">Token Meter</span>
+    <!-- header -->
+    <div style="display:flex;align-items:center;gap:8px;padding:11px 13px 9px;border-bottom:1px solid #1e1e30;">
+      <span class="material-symbols-outlined" style="font-size:15px;color:#7c7cff;">monitoring</span>
+      <span style="font-size:11px;font-weight:600;color:#e0e0f0;">Token Meter</span>
       <span
         x-show="m && m.totals.calls > 0"
-        style="margin-left:auto;font-size:9px;background:#1e1e2e;border:1px solid #3a3a5a;border-radius:99px;padding:1px 7px;color:#888;"
         x-text="m ? m.totals.calls + ' calls' : ''"
+        style="margin-left:auto;font-size:9px;background:#1e1e2e;border:1px solid #3a3a5a;border-radius:99px;padding:1px 7px;color:#888;"
       ></span>
       <button type="button" @click="open=false" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;padding:0 0 0 4px;line-height:1;">&times;</button>
     </div>
 
-    <!-- Empty state -->
-    <div
-      x-show="!m || m.totals.calls === 0"
-      style="padding:28px 16px;text-align:center;color:#555;font-size:11px;"
-    >
-      <span class="material-symbols-outlined" style="font-size:32px;display:block;margin-bottom:6px;color:#333;">data_usage</span>
+    <!-- empty -->
+    <div x-show="!m || m.totals.calls === 0" style="padding:28px 16px;text-align:center;color:#555;font-size:11px;">
+      <span class="material-symbols-outlined" style="font-size:30px;display:block;margin-bottom:6px;color:#333;">data_usage</span>
       Waiting for first LLM call…
     </div>
 
-    <!-- Live data -->
-    <div x-show="m && m.totals.calls > 0" style="padding:12px 14px 14px;">
+    <!-- live data -->
+    <div x-show="m && m.totals.calls > 0" style="padding:11px 13px 13px;">
 
       <!-- model badge -->
-      <div x-show="m && m.last" style="margin-bottom:10px;">
+      <div x-show="m && m.last" style="margin-bottom:9px;">
         <span
-          style="font-size:9px;background:#1a1a2e;border:1px solid #333;border-radius:4px;padding:2px 7px;color:#8080b0;"
           x-text="m?.last?.model ?? ''"
+          style="font-size:9px;background:#1a1a2e;border:1px solid #333;border-radius:4px;padding:2px 7px;color:#8080b0;"
         ></span>
       </div>
 
       <!-- stacked bar -->
-      <div style="margin-bottom:12px;">
+      <div style="margin-bottom:11px;">
         <div style="font-size:9px;color:#555;margin-bottom:3px;">Last call breakdown</div>
         <div style="height:8px;border-radius:4px;background:#1e1e2e;overflow:hidden;display:flex;" x-show="m && m.last">
           <div :style="'width:'+(m&&m.last&&m.last.input?Math.min(100,Math.round(100*m.last.cache_read/m.last.input))+'%':'0%')+';background:#22c55e;transition:width .4s;'" ></div>
-          <div :style="'width:'+(m&&m.last&&m.last.input?Math.min(100,Math.round(100*(m.last.input-m.last.cache_read)/m.last.input))+'%':'0%')+';background:#6366f1;transition:width .4s;'" ></div>
+          <div :style="'width:'+(m&&m.last&&m.last.input?Math.min(100,Math.round(100*(m.last.input-(m.last.cache_read||0))/m.last.input))+'%':'0%')+';background:#6366f1;transition:width .4s;'" ></div>
         </div>
-        <div style="display:flex;gap:10px;margin-top:4px;">
-          <span style="font-size:8px;color:#22c55e;">&#9646; cache_read</span>
-          <span style="font-size:8px;color:#6366f1;">&#9646; fresh input</span>
+        <div style="display:flex;gap:10px;margin-top:3px;">
+          <span style="font-size:8px;color:#22c55e;">&#9646; cached</span>
+          <span style="font-size:8px;color:#6366f1;">&#9646; fresh</span>
         </div>
       </div>
 
-      <!-- this call grid -->
-      <div style="background:#0a0a14;border:1px solid #1e1e30;border-radius:7px;padding:9px 11px;margin-bottom:10px;">
-        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">This call</div>
+      <!-- this call -->
+      <div style="background:#0a0a14;border:1px solid #1e1e30;border-radius:7px;padding:9px 11px;margin-bottom:9px;">
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">This call</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;">
-          <div>
-            <div style="font-size:8px;color:#444;">Input</div>
-            <div style="font-size:14px;font-weight:700;color:#e0e0f0;" x-text="(m?.last?.input??0).toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#444;">Output</div>
-            <div style="font-size:14px;font-weight:700;color:#e0e0f0;" x-text="(m?.last?.output??0).toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#22c55e;">Cache Read</div>
-            <div style="font-size:14px;font-weight:700;color:#22c55e;" x-text="(m?.last?.cache_read??0).toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#f59e0b;">Cache Write</div>
-            <div style="font-size:14px;font-weight:700;color:#f59e0b;" x-text="(m?.last?.cache_write??0).toLocaleString()"></div>
-          </div>
+          <div><div style="font-size:8px;color:#444;">Input</div><div style="font-size:14px;font-weight:700;color:#e0e0f0;" x-text="(m?.last?.input??0).toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#444;">Output</div><div style="font-size:14px;font-weight:700;color:#e0e0f0;" x-text="(m?.last?.output??0).toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#22c55e;">Cache Read</div><div style="font-size:14px;font-weight:700;color:#22c55e;" x-text="(m?.last?.cache_read??0).toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#f59e0b;">Cache Write</div><div style="font-size:14px;font-weight:700;color:#f59e0b;" x-text="(m?.last?.cache_write??0).toLocaleString()"></div></div>
         </div>
-        <div style="margin-top:8px;padding-top:7px;border-top:1px solid #14141e;display:flex;align-items:center;gap:7px;">
+        <div style="margin-top:7px;padding-top:6px;border-top:1px solid #14141e;display:flex;align-items:center;gap:7px;">
           <span style="font-size:8px;color:#444;">Cache hit</span>
           <span
             :style="'font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;' + ((m?.last?.cache_hit_pct??0)>50?'background:#14532d;color:#4ade80;':'background:#1c1c1c;color:#555;')"
@@ -165,29 +131,16 @@
       </div>
 
       <!-- session totals -->
-      <div style="background:#0a0a14;border:1px solid #1e1e30;border-radius:7px;padding:9px 11px;margin-bottom:10px;">
-        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">Session totals</div>
+      <div style="background:#0a0a14;border:1px solid #1e1e30;border-radius:7px;padding:9px 11px;margin-bottom:9px;">
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Session</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;">
-          <div>
-            <div style="font-size:8px;color:#444;">Total Input</div>
-            <div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.input.toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#444;">Total Output</div>
-            <div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.output.toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#22c55e;">Cache Read</div>
-            <div style="font-size:12px;font-weight:700;color:#22c55e;" x-text="m?.totals.cache_read.toLocaleString()"></div>
-          </div>
-          <div>
-            <div style="font-size:8px;color:#444;">Avg/Call</div>
-            <div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.calls ? Math.round(m.totals.input/m.totals.calls).toLocaleString() : '—'"></div>
-          </div>
+          <div><div style="font-size:8px;color:#444;">Input</div><div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.input.toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#444;">Output</div><div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.output.toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#22c55e;">Cache Read</div><div style="font-size:12px;font-weight:700;color:#22c55e;" x-text="m?.totals.cache_read.toLocaleString()"></div></div>
+          <div><div style="font-size:8px;color:#444;">Avg/Call</div><div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m?.totals.calls ? Math.round(m.totals.input/m.totals.calls).toLocaleString() : '—'"></div></div>
         </div>
-        <!-- cache bar -->
-        <div style="margin-top:9px;padding-top:7px;border-top:1px solid #14141e;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+        <div style="margin-top:8px;padding-top:6px;border-top:1px solid #14141e;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
             <span style="font-size:8px;color:#444;">Cache hit rate</span>
             <span style="font-size:8px;font-weight:700;color:#22c55e;" x-text="m ? m.cachePct(m.totals.input, m.totals.cache_read) : '0%'"></span>
           </div>
@@ -195,23 +148,16 @@
             <div :style="'height:100%;border-radius:3px;background:#22c55e;transition:width .6s;width:'+(m&&m.totals.input?Math.min(100,Math.round(100*m.totals.cache_read/m.totals.input))+'%':'0%')" ></div>
           </div>
         </div>
-        <!-- savings + cost -->
-        <div style="margin-top:9px;display:flex;justify-content:space-between;">
-          <div>
-            <div style="font-size:8px;color:#444;">Cache savings</div>
-            <div style="font-size:12px;font-weight:700;color:#22c55e;" x-text="m ? m.fmtCost(m.savings()) : '—'"></div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:8px;color:#444;">Total cost</div>
-            <div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m ? m.fmtCost(m.totals.cost) : '—'"></div>
-          </div>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;">
+          <div><div style="font-size:8px;color:#444;">Savings</div><div style="font-size:12px;font-weight:700;color:#22c55e;" x-text="m ? m.fmtCost(m.savings()) : '—'"></div></div>
+          <div style="text-align:right;"><div style="font-size:8px;color:#444;">Total cost</div><div style="font-size:12px;font-weight:700;color:#e0e0f0;" x-text="m ? m.fmtCost(m.totals.cost) : '—'"></div></div>
         </div>
       </div>
 
       <!-- call history -->
       <div x-show="m && m.history && m.history.length > 1">
         <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">History</div>
-        <div style="display:flex;flex-direction:column;gap:3px;max-height:140px;overflow-y:auto;">
+        <div style="display:flex;flex-direction:column;gap:3px;max-height:130px;overflow-y:auto;">
           <template x-for="c in m ? [...m.history].reverse().slice(0,20) : []" :key="c.call">
             <div style="display:flex;align-items:center;gap:5px;font-size:9px;padding:3px 7px;background:#0a0a14;border-radius:4px;">
               <span style="color:#333;min-width:20px;" x-text="'#'+c.call"></span>
@@ -229,11 +175,10 @@
         </div>
       </div>
 
-      <!-- no pricing notice -->
-      <div x-show="m && !m.pricingSet()" style="margin-top:10px;font-size:9px;color:#444;border:1px solid #1e1e1e;border-radius:5px;padding:7px;">
+      <!-- no pricing tip -->
+      <div x-show="m && !m.pricingSet()" style="margin-top:9px;font-size:9px;color:#444;border:1px solid #1e1e1e;border-radius:5px;padding:7px;">
         💡 Set <code style="color:#8080b0;">TOKEN_METER_PRICE_INPUT_PER_1M</code> for cost estimates.
       </div>
     </div>
   </div>
 </div>
-</template>
